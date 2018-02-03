@@ -80,7 +80,22 @@ $(document).ready(function(){
 						for(var i=0;i<arguments.length;i++){
 							list.push(arguments[i]);
 						}
-						renderProvinceContent(list);
+
+						//renderProvinceContent(list);
+						list = list.map(function(item){
+							item.aqiV = parseInt(item.aqi);
+							return item;
+						});
+						list.sort(function(item1, item2){
+							if(item1.aqiV > item2.aqiV){
+								return 1;
+							}else{
+								return -1;
+							}
+							return 0;
+						});
+
+						renderContentPanel(list);
 
 					});
 				}else{
@@ -129,13 +144,7 @@ $(document).ready(function(){
 						renderHighCharts(data.text, destArr, startDate.year(), startDate.month(), startDate.date());
 
 					});
-					
-					
-					
 				}
-				
-
-				
 			}
 		});
 	}
@@ -171,10 +180,10 @@ $(document).ready(function(){
 		});
 	}
 
-	function renderProvinceContent(data){
+	function renderBestThree(data){
 		var cityList = data;
 		var pagefn = doT.template(document.getElementById('cityItem').text);
-		$(".content-page").html(pagefn(cityList));
+		$("#best-3-container").html(pagefn(cityList));
 	}
 
 	function loadData(cityId){
@@ -230,6 +239,48 @@ $(document).ready(function(){
 		    }]
 
 		});
+	}
+
+	function renderContentPanel(list){
+		// render the cities aqi column chart
+
+		var cate = [];
+		var aqiV = [];
+		list.forEach(function(item){
+			cate.push(item.citynm);
+			aqiV.push(item.aqiV);
+		});
+		Highcharts.chart('col-chart-container', {
+		    chart: {
+		        type: 'bar'
+		    },
+		    title: {
+		        text: 'AQI of all cities in this province'
+		    },
+		    xAxis: {
+		        categories: cate
+		    },
+		    yAxis: {
+		        min: 0,
+		        title: {
+		            text: 'AQI',
+		            align: 'high'
+		        },
+		        labels: {
+		            overflow: 'justify'
+		        }
+		    },
+		    credits: {
+		        enabled: false
+		    },
+		    series: [{
+		        name: 'aqi',
+		        data: aqiV
+		    }]
+		});
+		// pick the 3 best cities to show more details
+
+		renderBestThree(list.slice(0, 3));
 	}
 
 	function init(){
